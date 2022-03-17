@@ -152,3 +152,93 @@ FROM personnage p
 LEFT JOIN boire b
 ON p.id_personnage = b.id_personnage
 WHERE b.id_personnage IS NULL
+
+-- 15.
+
+SELECT nom_personnage
+FROM personnage p 
+LEFT JOIN autoriser_boire a
+ON p.id_personnage = a.id_personnage
+WHERE a.id_personnage IS NULL
+
+-- A.
+
+-- Je commence par supprimer la ligne avec le personnage Champdeblix
+
+DELETE FROM personnage
+WHERE nom_personnage = 'Champdeblix'
+
+-- Puis je crée une ligne avec les valeurs directement adaptées ou obtenues via un select
+
+INSERT INTO personnage (nom_personnage, adresse_personnage, id_lieu, id_specialite)
+VALUES ('Champdeblix',
+        'Ferme Hantassion',
+        (SELECT id_specialite
+        FROM specialite s
+        WHERE s.nom_specialite = 'Agriculteur'),
+        (SELECT id_lieu
+        FROM lieu l
+        WHERE l.nom_lieu = 'Rotomagus'))
+
+-- B.
+
+-- Je supprime la ligne correspondant à l'autorisation de Bonnemine à boire la potion magique
+
+DELETE FROM autoriser_boire
+WHERE id_personnage = 12
+AND id_potion = 1
+
+-- Puis je crée une ligne lui donnant l'autorisation de le faire
+
+INSERT INTO autoriser_boire
+VALUES  ((SELECT id_potion
+        FROM potion p
+        WHERE p.nom_potion = 'Magique'),
+        (SELECT id_personnage
+        FROM personnage p
+        WHERE p.nom_personnage = 'Bonemine'))
+
+-- C.
+
+DELETE FROM casque c
+WHERE c.id_casque IN (SELECT c_g.id_casque
+                    FROM    (SELECT id_casque
+                            FROM casque c, type_casque t_c
+                            WHERE t_c.nom_type_casque = 'Grec'
+                            AND c.id_type_casque = t_c.id_type_casque) c_g
+                    LEFT JOIN prendre_casque p_c
+                    ON c_g.id_casque = p_c.id_casque
+                    WHERE p_c.id_casque IS NULL)
+
+-- D.
+
+UPDATE personnage
+SET id_lieu =   (SELECT id_lieu
+                FROM lieu l
+                WHERE l.nom_lieu = 'Condate'),
+    adresse_personnage = 'Prison'
+WHERE nom_personnage = 'Zérozérosix'
+
+-- E.
+
+DELETE FROM composer
+WHERE id_potion =   (SELECT id_potion
+                    FROM potion
+                    WHERE nom_potion = 'Soupe')
+AND id_ingredient = (SELECT id_ingredient
+                    FROM ingredient
+                    WHERE nom_ingredient = 'Persil')
+
+-- F.
+
+UPDATE prendre_casque
+SET id_casque = (SELECT c.id_casque
+                FROM casque c
+                WHERE c.nom_casque = 'Weisenau')
+WHERE id_casque =   (SELECT c.id_casque
+                    FROM casque c
+                    WHERE c.nom_casque = 'Ostrogoth')
+AND qte = 42
+AND id_personnage = (SELECT p.id_personnage
+                    FROM personnage p
+                    WHERE p.nom_personnage = 'Obélix')
